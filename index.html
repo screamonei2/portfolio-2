@@ -80,10 +80,16 @@
 
         /* Mobile Responsive Adjustments */
         @media (max-width: 768px) {
-            #detail-panel {
-                width: 90vw !important;
-                right: -95vw !important;
-                padding: 2.5rem 1.5rem !important;
+            #modal-overlay {
+                padding: 1.5rem !important;
+                justify-content: center !important;
+                align-items: flex-end !important;
+            }
+            #detail-modal-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 2rem 1.5rem !important;
+                margin-bottom: 1rem !important;
             }
             .label {
                 font-size: 8px !important;
@@ -143,11 +149,26 @@
         </div>
     </div>
 
-    <!-- Case Study Detail Panel (Glassmorphism) -->
-    <div id="detail-panel" style="position: fixed; right: -50vw; top: 0; width: 40vw; height: 100vh; background: rgba(5,5,5,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 50; padding: 4rem; box-sizing: border-box; transition: right 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
-        <button id="close-panel" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; cursor: pointer; font-family: monospace;">[ X ] FECHAR</button>
-        <h2 id="detail-title" style="margin-top: 4rem; font-size: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">CASE STUDY</h2>
-        <p id="detail-desc" style="color: rgba(255,255,255,0.6); line-height: 1.6; margin-top: 2rem;">A visual breakdown of the architecture, design tokens, and systematic refresh implemented to shift the product narrative.</p>
+    <!-- Full-Screen Glassmorphism Blur Overlay & Modal Card -->
+    <div id="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(3,3,5,0.65); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.6s ease, visibility 0.6s ease; display: flex; align-items: center; justify-content: flex-end; padding: 4rem; box-sizing: border-box;">
+        <div id="detail-modal-card" style="width: 42vw; max-width: 580px; min-width: 320px; background: rgba(12,12,18,0.75); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 3rem; box-sizing: border-box; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1); transform: translateX(50px) scale(0.95); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="modal-tag" style="font-family: monospace; font-size: 10px; letter-spacing: 3px; color: #ffcc00; text-transform: uppercase;">[ ARCHITECTURE SPEC ]</span>
+                <button id="close-modal" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: monospace; font-size: 11px; letter-spacing: 1px; transition: all 0.3s;">[ X ] FECHAR</button>
+            </div>
+            <h2 id="detail-title" style="margin-top: 2rem; font-size: 2.2rem; font-weight: 300; letter-spacing: 1px; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">CASE STUDY</h2>
+            <p id="detail-desc" style="color: rgba(255,255,255,0.65); line-height: 1.7; font-size: 0.95rem; margin-top: 1.5rem;">A visual breakdown of the architecture, design tokens, and systematic refresh implemented to shift the product narrative.</p>
+            <div style="margin-top: 2.5rem; display: flex; gap: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem;">
+                <div style="flex: 1;">
+                    <div style="font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.4); text-transform: uppercase;">ROBUSTNESS</div>
+                    <div style="font-size: 1.2rem; color: #ffffff; font-family: monospace; margin-top: 4px;">0.85 PBR</div>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.4); text-transform: uppercase;">LUMINANCE</div>
+                    <div id="modal-lum-val" style="font-size: 1.2rem; color: #ffcc00; font-family: monospace; margin-top: 4px;">NEON GLOW</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Main 3D Logic -->
@@ -832,49 +853,96 @@
         animate();
 
         // ==========================================
-        // 11. Click Interaction & Side Panel Expansion
+        // 11. Click Interaction & Spatial Object Expansion Modal
         // ==========================================
         let activeExpandedObj = null;
 
-        window.addEventListener('click', () => {
-            if (activeExpandedObj) return; // Panel already open
+        window.addEventListener('click', (e) => {
+            if (activeExpandedObj) return; // Modal already open
 
             if (isHoveredObj2) {
-                activeExpandedObj = obj2Parallax;
-                openCasePanel("CLIENT 01: SAAS REFRESH", "A visual breakdown of the cloud infrastructure, spatial design tokens, and systematic refresh implemented for Client 01.");
+                openCaseModal(
+                    "CLIENT 01: SAAS REFRESH",
+                    "A visual breakdown of the cloud infrastructure, spatial design tokens, and systematic refresh implemented for Client 01.",
+                    "[ SAAS PLATFORM SPEC ]",
+                    "#ffcc00",
+                    "YELLOW NEON",
+                    obj2Parallax
+                );
             } else if (isHoveredObj3) {
-                activeExpandedObj = obj3Parallax;
-                openCasePanel("CLIENT 02: AI PLATFORM", "Deep dive into the neural architecture, real-time spatial data visualizer, and custom web interface for Client 02.");
+                openCaseModal(
+                    "CLIENT 02: AI PLATFORM",
+                    "Deep dive into the neural architecture, real-time spatial data visualizer, and custom web interface for Client 02.",
+                    "[ AI PLATFORM SPEC ]",
+                    "#00e5ff",
+                    "CYAN ELECTRIC",
+                    obj3Parallax
+                );
             }
         });
 
-        function openCasePanel(title, description) {
+        function openCaseModal(title, description, tag, lumColor, lumText, targetObj) {
             document.documentElement.style.overflow = 'hidden';
+            activeExpandedObj = targetObj;
+
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalCard = document.getElementById('detail-modal-card');
             document.getElementById('detail-title').innerText = title;
             document.getElementById('detail-desc').innerText = description;
-            document.getElementById('detail-panel').style.right = '0';
+            document.getElementById('modal-tag').innerText = tag;
+            document.getElementById('modal-lum-val').innerText = lumText;
+            document.getElementById('modal-lum-val').style.color = lumColor;
 
+            // Fade overlay & slide modal card in
+            modalOverlay.style.visibility = 'visible';
+            modalOverlay.style.opacity = '1';
+            modalCard.style.transform = 'translateX(0) scale(1)';
+
+            // Transform 3D Object: GROW 1.7x & move LEFT (-5.5), half hidden on left edge!
             if (activeExpandedObj) {
+                const targetX = isMobile ? -3.0 : -5.5;
+                const targetScale = (activeExpandedObj.userData.baseScale || 1.0) * (isMobile ? 1.35 : 1.65);
+
                 gsap.to(activeExpandedObj.position, {
-                    x: -2.5,
-                    duration: 0.8,
+                    x: targetX,
+                    duration: 0.9,
+                    ease: "power3.out"
+                });
+                gsap.to(activeExpandedObj.scale, {
+                    x: targetScale,
+                    y: targetScale,
+                    z: targetScale,
+                    duration: 0.9,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.rotation, {
-                    y: "+=0.5",
-                    duration: 0.8,
+                    y: "+=0.8",
+                    duration: 0.9,
                     ease: "power3.out"
                 });
             }
         }
 
-        document.getElementById('close-panel').addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.getElementById('detail-panel').style.right = '-50vw';
+        function closeModal() {
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalCard = document.getElementById('detail-modal-card');
+
+            modalOverlay.style.opacity = '0';
+            modalOverlay.style.visibility = 'hidden';
+            modalCard.style.transform = 'translateX(50px) scale(0.95)';
 
             if (activeExpandedObj) {
+                const baseScale = activeExpandedObj.userData.baseScale || 1.0;
+
                 gsap.to(activeExpandedObj.position, {
                     x: 0,
+                    duration: 0.8,
+                    ease: "power3.out"
+                });
+                gsap.to(activeExpandedObj.scale, {
+                    x: baseScale,
+                    y: baseScale,
+                    z: baseScale,
                     duration: 0.8,
                     ease: "power3.out"
                 });
@@ -889,6 +957,17 @@
                 });
             } else {
                 document.documentElement.style.overflow = '';
+            }
+        }
+
+        document.getElementById('close-modal').addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeModal();
+        });
+
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-overlay') {
+                closeModal();
             }
         });
 
