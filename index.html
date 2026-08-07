@@ -149,8 +149,8 @@
         </div>
     </div>
 
-    <!-- Full-Screen Glassmorphism Blur Overlay & Modal Card -->
-    <div id="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(3,3,5,0.65); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.6s ease, visibility 0.6s ease; display: flex; align-items: center; justify-content: flex-end; padding: 4rem; box-sizing: border-box;">
+    <!-- Full-Screen Dark Overlay (NO BLUR) & Modal Card -->
+    <div id="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(3,3,5,0.7); z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.6s ease, visibility 0.6s ease; display: flex; align-items: center; justify-content: flex-end; padding: 4rem; box-sizing: border-box;">
         <div id="detail-modal-card" style="width: 42vw; max-width: 580px; min-width: 320px; background: rgba(12,12,18,0.75); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 3rem; box-sizing: border-box; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1); transform: translateX(50px) scale(0.95); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span id="modal-tag" style="font-family: monospace; font-size: 10px; letter-spacing: 3px; color: #ffcc00; text-transform: uppercase;">[ ARCHITECTURE SPEC ]</span>
@@ -898,26 +898,28 @@
             modalOverlay.style.opacity = '1';
             modalCard.style.transform = 'translateX(0) scale(1)';
 
-            // Transform 3D Object: GROW 1.7x & move LEFT (-5.5), half hidden on left edge!
+            // Transform 3D Object: GIGANTIC SCALE (3.8x) & move to LEFT EDGE (-11.0, Z=5.0), half hidden off screen!
             if (activeExpandedObj) {
-                const targetX = isMobile ? -3.0 : -5.5;
-                const targetScale = (activeExpandedObj.userData.baseScale || 1.0) * (isMobile ? 1.35 : 1.65);
+                const targetX = isMobile ? -5.5 : -11.0;
+                const targetZ = isMobile ? 3.0 : 5.0;
+                const targetScale = (activeExpandedObj.userData.baseScale || 1.0) * (isMobile ? 2.5 : 3.8);
 
                 gsap.to(activeExpandedObj.position, {
                     x: targetX,
-                    duration: 0.9,
+                    z: targetZ,
+                    duration: 1.0,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.scale, {
                     x: targetScale,
                     y: targetScale,
                     z: targetScale,
-                    duration: 0.9,
+                    duration: 1.0,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.rotation, {
-                    y: "+=0.8",
-                    duration: 0.9,
+                    y: "+=1.2",
+                    duration: 1.0,
                     ease: "power3.out"
                 });
             }
@@ -936,19 +938,20 @@
 
                 gsap.to(activeExpandedObj.position, {
                     x: 0,
-                    duration: 0.8,
+                    z: 0,
+                    duration: 0.9,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.scale, {
                     x: baseScale,
                     y: baseScale,
                     z: baseScale,
-                    duration: 0.8,
+                    duration: 0.9,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.rotation, {
                     y: 0,
-                    duration: 0.8,
+                    duration: 0.9,
                     ease: "power3.out",
                     onComplete: () => {
                         activeExpandedObj = null;
