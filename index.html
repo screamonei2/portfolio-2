@@ -334,16 +334,19 @@
 
         // Helper to generate a high-contrast emissive mask from texture (isolates bright cracks, locks rock body to black)
         function createThresholdEmissiveMap(texture, threshold = 0.55) {
-            if (isMobile || !texture || !texture.image) return texture;
+            if (!texture || !texture.image) return texture;
 
             try {
                 const img = texture.image;
                 const canvas = document.createElement('canvas');
-                const width = img.width || img.videoWidth || 1024;
-                const height = img.height || img.videoHeight || 1024;
+                // Cap canvas size to 256x256 on mobile for fast, lightweight memory execution
+                const maxCanvasSize = isMobile ? 256 : 1024;
+                const width = Math.min(maxCanvasSize, img.width || img.videoWidth || maxCanvasSize);
+                const height = Math.min(maxCanvasSize, img.height || img.videoHeight || maxCanvasSize);
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
+                if (!ctx) return texture;
 
                 ctx.drawImage(img, 0, 0, width, height);
                 const imgData = ctx.getImageData(0, 0, width, height);
@@ -456,7 +459,7 @@
                         if (child.material.map) {
                             child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
                             child.material.emissive.setHex(0xff3300); // Red Magma
-                            child.material.emissiveIntensity = isMobile ? 6.0 : 18.0;
+                            child.material.emissiveIntensity = 18.0;
                             emissiveMats1.push(child.material);
                         }
 
@@ -749,8 +752,8 @@
                 obj3Light.intensity += (targetLight3 - obj3Light.intensity) * 0.08;
             }
 
-            // Subtle Mouse Parallax (only Y rotation, X rotation removed)
-            targetX = mouseX * 0.1;
+            // Subtle Mouse Parallax (only Y rotation when mouse is active)
+            targetX = hasMouseMoved ? (mouseX * 0.1) : 0;
 
             [obj1Parallax, obj2Parallax, obj3Parallax].forEach(pGroup => {
                 pGroup.rotation.y += (targetX - pGroup.rotation.y) * 0.05;
@@ -758,13 +761,15 @@
 
             // Background Parallax Interaction
             if (typeof bgGroup !== 'undefined') {
-                bgGroup.position.x += (mouseX * 2 - bgGroup.position.x) * 0.02;
-                bgGroup.position.y += (-mouseY * 2 - bgGroup.position.y) * 0.02;
+                const bgTargetX = hasMouseMoved ? (mouseX * 2) : 0;
+                const bgTargetY = hasMouseMoved ? (-mouseY * 2) : 0;
+                bgGroup.position.x += (bgTargetX - bgGroup.position.x) * 0.02;
+                bgGroup.position.y += (bgTargetY - bgGroup.position.y) * 0.02;
             }
 
             // Project 3D Mouse Position into Particle Corridor
-            const mouse3DX = mouseX * 18;
-            const mouse3DY = cameraGroup.position.y + (mouseY * 10);
+            const mouse3DX = hasMouseMoved ? (mouseX * 18) : 0;
+            const mouse3DY = cameraGroup.position.y + (hasMouseMoved ? (mouseY * 10) : 0);
             const mouse3DZ = 0;
 
             const positions = particlesGeo.attributes.position.array;
