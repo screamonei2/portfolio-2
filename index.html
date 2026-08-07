@@ -13,6 +13,9 @@
     <!-- Lenis for smooth cinematic scrolling -->
     <script src="https://unpkg.com/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
 
+    <!-- ES Module Shims for legacy mobile browsers (iOS Safari < 16.4, Android Chrome < 105) -->
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+
     <!-- Three.js Import Map -->
     <script type="importmap">
         {
@@ -99,6 +102,15 @@
 </head>
 
 <body>
+
+    <!-- Dark Fantasy High-Tech Preloader HUD -->
+    <div id="loader-screen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #030305; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s ease;">
+        <div style="font-family: monospace; font-size: 13px; letter-spacing: 4px; color: #ff3300; margin-bottom: 1.5rem; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,51,0,0.5);">INITIALIZING SPATIAL ARCHITECTURE...</div>
+        <div style="width: 220px; height: 3px; background: rgba(255,255,255,0.1); position: relative; border-radius: 2px; overflow: hidden;">
+            <div id="loader-bar" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #ff3300, #ffcc00, #00e5ff); transition: width 0.3s ease; box-shadow: 0 0 8px #ffcc00;"></div>
+        </div>
+        <div id="loader-percent" style="font-family: monospace; font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.5); margin-top: 1rem;">0%</div>
+    </div>
 
     <!-- WebGL Background -->
     <div id="webgl-container"></div>
@@ -374,9 +386,31 @@
         }
 
         // ==========================================
-        // 5. Load 3D Models & Materials (with Hover Caching)
+        // 5. Load 3D Models & Materials (with Preloader & Hover Caching)
         // ==========================================
-        const gltfLoader = new GLTFLoader();
+        const loadingManager = new THREE.LoadingManager();
+        const loaderBar = document.getElementById('loader-bar');
+        const loaderPercent = document.getElementById('loader-percent');
+        const loaderScreen = document.getElementById('loader-screen');
+
+        loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+            const progress = Math.round((itemsLoaded / itemsTotal) * 100);
+            if (loaderBar) loaderBar.style.width = progress + '%';
+            if (loaderPercent) loaderPercent.innerText = progress + '%';
+        };
+
+        loadingManager.onLoad = () => {
+            if (loaderBar) loaderBar.style.width = '100%';
+            if (loaderPercent) loaderPercent.innerText = '100%';
+            setTimeout(() => {
+                if (loaderScreen) {
+                    loaderScreen.style.opacity = '0';
+                    loaderScreen.style.visibility = 'hidden';
+                }
+            }, 400);
+        };
+
+        const gltfLoader = new GLTFLoader(loadingManager);
         let soulStoneModel1 = null;
         let soulStoneModel2 = null;
         let soulStoneModel3 = null;
@@ -597,14 +631,20 @@
         scene.add(particlesMesh);
 
         // ==========================================
-        // 7. Camera Scrollytelling Timeline
+        // 7. Camera Scrollytelling Timeline & Section Snapping
         // ==========================================
         const cameraTL = gsap.timeline({
             scrollTrigger: {
                 trigger: "#scroll-proxy",
                 start: "top top",
                 end: "bottom bottom",
-                scrub: 1
+                scrub: 1,
+                snap: {
+                    snapTo: [0, 0.5, 1.0], // Snaps cleanly to Hero (0), Case 1 (0.5), Case 2 (1.0)
+                    duration: { min: 0.25, max: 0.6 },
+                    delay: 0.05,
+                    ease: "power1.inOut"
+                }
             }
         });
 
@@ -647,8 +687,9 @@
         // ==========================================
         // 9. Ultra-Lightweight Screen Proximity Hover (Zero Raycaster Overhead)
         // ==========================================
-        let mouseX = 0;
-        let mouseY = 0;
+        let mouseX = -999;
+        let mouseY = -999;
+        let hasMouseMoved = false;
         let targetX = 0;
 
         let isHoveredObj1 = false;
@@ -660,6 +701,7 @@
         let obj3CurrentScale = 1.0;
 
         window.addEventListener('mousemove', (e) => {
+            hasMouseMoved = true;
             mouseX = (e.clientX / window.innerWidth) * 2 - 1;
             mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
         });
@@ -673,7 +715,7 @@
             const time = clock.getElapsedTime();
 
             // --- Zero-CPU 2D Radial Proximity Check ---
-            const mouseDistFromCenter = Math.sqrt(mouseX * mouseX + mouseY * mouseY);
+            const mouseDistFromCenter = hasMouseMoved ? Math.sqrt(mouseX * mouseX + mouseY * mouseY) : 999;
             const currentCamY = cameraGroup.position.y;
 
             // Hover Hero when camera is near Y = 0 and cursor is near center
