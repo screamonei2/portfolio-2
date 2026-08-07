@@ -898,28 +898,27 @@
             modalOverlay.style.opacity = '1';
             modalCard.style.transform = 'translateX(0) scale(1)';
 
-            // Transform 3D Object: GIGANTIC SCALE (3.8x) & move to LEFT EDGE (-11.0, Z=5.0), half hidden off screen!
+            // Transform 3D Object: Centered Zoom (x: 0, z: 3.5, 1.8x scale)
             if (activeExpandedObj) {
-                const targetX = isMobile ? -5.5 : -11.0;
-                const targetZ = isMobile ? 3.0 : 5.0;
-                const targetScale = (activeExpandedObj.userData.baseScale || 1.0) * (isMobile ? 2.5 : 3.8);
+                const targetZ = isMobile ? 2.0 : 3.5;
+                const targetScale = (activeExpandedObj.userData.baseScale || 1.0) * (isMobile ? 1.4 : 1.8);
 
                 gsap.to(activeExpandedObj.position, {
-                    x: targetX,
+                    x: 0,
                     z: targetZ,
-                    duration: 1.0,
+                    duration: 0.9,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.scale, {
                     x: targetScale,
                     y: targetScale,
                     z: targetScale,
-                    duration: 1.0,
+                    duration: 0.9,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.rotation, {
-                    y: "+=1.2",
-                    duration: 1.0,
+                    y: "+=0.8",
+                    duration: 0.9,
                     ease: "power3.out"
                 });
             }
@@ -939,19 +938,19 @@
                 gsap.to(activeExpandedObj.position, {
                     x: 0,
                     z: 0,
-                    duration: 0.9,
+                    duration: 0.8,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.scale, {
                     x: baseScale,
                     y: baseScale,
                     z: baseScale,
-                    duration: 0.9,
+                    duration: 0.8,
                     ease: "power3.out"
                 });
                 gsap.to(activeExpandedObj.rotation, {
                     y: 0,
-                    duration: 0.9,
+                    duration: 0.8,
                     ease: "power3.out",
                     onComplete: () => {
                         activeExpandedObj = null;
