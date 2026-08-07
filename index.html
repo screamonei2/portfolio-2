@@ -631,19 +631,19 @@
         scene.add(particlesMesh);
 
         // ==========================================
-        // 7. Camera Scrollytelling Timeline & Section Snapping
+        // 7. Camera Scrollytelling Timeline & Instant Section Snapping
         // ==========================================
         const cameraTL = gsap.timeline({
             scrollTrigger: {
                 trigger: "#scroll-proxy",
                 start: "top top",
                 end: "bottom bottom",
-                scrub: 1,
+                scrub: true, // Immediate camera response (removes 1s scrub lag)
                 snap: {
-                    snapTo: [0, 0.5, 1.0], // Snaps cleanly to Hero (0), Case 1 (0.5), Case 2 (1.0)
-                    duration: { min: 0.25, max: 0.6 },
-                    delay: 0.05,
-                    ease: "power1.inOut"
+                    snapTo: [0, 0.5, 1.0], // Snaps instantly to Hero (0), Case 1 (0.5), Case 2 (1.0)
+                    delay: 0,             // Zero delay - starts snapping immediately on scroll
+                    duration: { min: 0.2, max: 0.4 },
+                    ease: "power2.out"
                 }
             }
         });
