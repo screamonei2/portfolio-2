@@ -82,6 +82,19 @@
         .yellow-line { background: rgba(255, 204, 0, 0.4); }
         .cyan-line { background: rgba(0, 229, 255, 0.4); }
         .label { position: absolute; font-family: monospace; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.7); text-transform: uppercase; white-space: nowrap; }
+
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 768px) {
+            #detail-panel {
+                width: 90vw !important;
+                right: -95vw !important;
+                padding: 2.5rem 1.5rem !important;
+            }
+            .label {
+                font-size: 8px !important;
+                letter-spacing: 1px !important;
+            }
+        }
     </style>
 </head>
 
@@ -143,11 +156,15 @@
         // ==========================================
         // 1. Smooth Scrolling Setup (Lenis + GSAP)
         // ==========================================
+        const isMobile = window.innerWidth < 768;
+
         const lenis = new Lenis({
             duration: 1.5,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             direction: 'vertical',
             smooth: true,
+            smoothTouch: false, // Allows native mobile touch scrolling without hijacking
+            touchMultiplier: 1.5,
         });
 
         function raf(time) {
@@ -165,7 +182,6 @@
         // 2. Three.js Scene Setup
         // ==========================================
         const container = document.getElementById('webgl-container');
-        const isMobile = window.innerWidth < 768;
 
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x030305, 0.035);
@@ -178,12 +194,17 @@
         camera.position.set(0, 0, 18);
         cameraGroup.add(camera);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2.0));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.6;
         container.appendChild(renderer.domElement);
+
+        renderer.domElement.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            console.warn('WebGL context lost - attempting recovery');
+        }, false);
 
         // ==========================================
         // 3. Environment & Lighting
@@ -305,7 +326,7 @@
 
         // Helper to generate a high-contrast emissive mask from texture (isolates bright cracks, locks rock body to black)
         function createThresholdEmissiveMap(texture, threshold = 0.55) {
-            if (!texture || !texture.image) return texture;
+            if (isMobile || !texture || !texture.image) return texture;
 
             try {
                 const img = texture.image;
@@ -367,10 +388,12 @@
         const targetMeshes3 = [];
         const emissiveMats3 = [];
 
+        const baseModelScaleFactor = isMobile ? 3.6 : 5.0;
+
         Promise.all([
-            gltfLoader.loadAsync('./1.glb'),
-            gltfLoader.loadAsync('./2.glb').catch(() => null),
-            gltfLoader.loadAsync('./3.glb').catch(() => null)
+            gltfLoader.loadAsync('./1.glb').catch(e => { console.error('Error loading 1.glb:', e); return null; }),
+            gltfLoader.loadAsync('./2.glb').catch(e => { console.error('Error loading 2.glb:', e); return null; }),
+            gltfLoader.loadAsync('./3.glb').catch(e => { console.error('Error loading 3.glb:', e); return null; })
         ]).then(([gltf1, gltf2, gltf3]) => {
 
             // --- Model 1 Setup (Hero) ---
@@ -383,7 +406,7 @@
                 soulStoneModel1.position.sub(center1);
 
                 const size1 = box1.getSize(new THREE.Vector3()).length();
-                soulStoneModel1.userData.baseScale = 5.0 / size1;
+                soulStoneModel1.userData.baseScale = baseModelScaleFactor / size1;
                 soulStoneModel1.scale.setScalar(soulStoneModel1.userData.baseScale);
 
                 obj1Parallax.add(soulStoneModel1);
@@ -403,7 +426,7 @@
                         if (child.material.map) {
                             child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
                             child.material.emissive.setHex(0xff3300); // Red Magma
-                            child.material.emissiveIntensity = 18.0;
+                            child.material.emissiveIntensity = isMobile ? 6.0 : 18.0;
                             emissiveMats1.push(child.material);
                         }
 
@@ -422,7 +445,7 @@
                 soulStoneModel2.position.sub(center2);
 
                 const size2 = box2.getSize(new THREE.Vector3()).length();
-                soulStoneModel2.userData.baseScale = 5.0 / size2;
+                soulStoneModel2.userData.baseScale = baseModelScaleFactor / size2;
                 soulStoneModel2.scale.setScalar(soulStoneModel2.userData.baseScale);
 
                 obj2Parallax.add(soulStoneModel2);
@@ -461,7 +484,7 @@
                 soulStoneModel3.position.sub(center3);
 
                 const size3 = box3.getSize(new THREE.Vector3()).length();
-                soulStoneModel3.userData.baseScale = 5.0 / size3;
+                soulStoneModel3.userData.baseScale = baseModelScaleFactor / size3;
                 soulStoneModel3.scale.setScalar(soulStoneModel3.userData.baseScale);
 
                 obj3Parallax.add(soulStoneModel3);
