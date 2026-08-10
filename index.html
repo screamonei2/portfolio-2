@@ -27,10 +27,9 @@
     </script>
 
     <style>
-        /* Native CSS Scroll Snap Architecture */
+        /* Clean Full-Page Scroll Architecture */
         html {
             scroll-snap-type: y proximity;
-            scroll-behavior: smooth;
         }
 
         body {
@@ -216,17 +215,24 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
         // ==========================================
-        // 1. Smooth Scrolling Setup (Lenis + GSAP)
+        // 1. Smooth Scrolling Setup (Lenis + GSAP + Velocity Tracker)
         // ==========================================
         const isMobile = window.innerWidth < 768;
+        let currentScrollVelocity = 0;
 
         const lenis = new Lenis({
-            duration: 1.5,
+            duration: 1.2,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             direction: 'vertical',
             smooth: true,
-            smoothTouch: false, // Allows native mobile touch scrolling without hijacking
+            smoothTouch: false,
             touchMultiplier: 1.5,
+        });
+
+        gsap.registerPlugin(ScrollTrigger);
+        lenis.on('scroll', (e) => {
+            ScrollTrigger.update();
+            currentScrollVelocity = Math.abs(e.velocity || 0);
         });
 
         function raf(time) {
@@ -234,10 +240,6 @@
             requestAnimationFrame(raf);
         }
         requestAnimationFrame(raf);
-
-        gsap.registerPlugin(ScrollTrigger);
-        lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add((time) => { lenis.raf(time * 1000); });
         gsap.ticker.lagSmoothing(0);
 
         // ==========================================
@@ -832,6 +834,10 @@
             const targetBloomThreshold = isAnyHovered ? 0.65 : 0.80;
             bloomPass.strength += (targetBloomStrength - bloomPass.strength) * 0.06;
             bloomPass.threshold += (targetBloomThreshold - bloomPass.threshold) * 0.06;
+
+            // --- Igloo-Style Dynamic RGB Chromatic Aberration Glitch Surge on Scroll ---
+            const targetRGBShift = 0.0005 + Math.min(0.022, currentScrollVelocity * 0.0018);
+            rgbShiftPass.uniforms['amount'].value += (targetRGBShift - rgbShiftPass.uniforms['amount'].value) * 0.15;
 
             // Subtle Mouse Parallax (only Y rotation when mouse is active)
             targetX = hasMouseMoved ? (mouseX * 0.1) : 0;
