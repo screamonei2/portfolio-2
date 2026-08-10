@@ -261,7 +261,7 @@
         const container = document.getElementById('webgl-container');
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x030305, 0.035);
+        scene.fog = new THREE.FogExp2(0x030305, 0.012);
 
         // Camera Group for Camera Scrollytelling
         const cameraGroup = new THREE.Group();
@@ -299,8 +299,13 @@
         scene.environment = pmremGenerator.fromScene(envScene).texture;
 
         // Global Soft Ambient Light (Eliminates pitch-black shadows)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 3.5);
         scene.add(ambientLight);
+
+        // Dedicated Volcanic Cavern Light (Highlights Cavern Rock Structure)
+        const caveLight = new THREE.DirectionalLight(0xffaa77, 3.5);
+        caveLight.position.set(0, 20, 15);
+        scene.add(caveLight);
 
         // Soft Front Fill Light (Ensures high visibility without harsh specular spots)
         const fillLight = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -498,17 +503,25 @@
             gltfLoader.loadAsync('./cave.glb').then(gltfCave => {
                 if (gltfCave) {
                     const caveModel = gltfCave.scene;
-                    caveModel.position.set(0, -15, 0);
-                    caveModel.scale.setScalar(8.0);
+
+                    // Center bounding box of GLTF mesh
+                    const caveBox = new THREE.Box3().setFromObject(caveModel);
+                    const caveCenter = caveBox.getCenter(new THREE.Vector3());
+                    caveModel.position.sub(caveCenter);
+
+                    const caveSize = caveBox.getSize(new THREE.Vector3()).length();
+                    const scaleFactor = caveSize > 0 ? (60.0 / caveSize) : 8.0;
+                    caveModel.scale.setScalar(scaleFactor);
+                    caveModel.position.set(0, -10, 0);
 
                     caveModel.traverse((child) => {
                         if (child.isMesh && child.material) {
                             child.material = child.material.clone();
-                            child.material.roughness = 0.9;
-                            if (child.material.emissiveMap || child.material.map) {
-                                child.material.emissive.setHex(0xff3300);
-                                child.material.emissiveIntensity = 2.0;
-                            }
+                            child.material.color.setHex(0x3a4252);
+                            child.material.roughness = 0.85;
+                            child.material.metalness = 0.15;
+                            child.material.emissive.setHex(0xff3300);
+                            child.material.emissiveIntensity = 2.0;
                             child.material.needsUpdate = true;
                         }
                     });
