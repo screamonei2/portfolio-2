@@ -268,7 +268,7 @@
         scene.add(cameraGroup);
 
         const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0, 18);
+        camera.position.set(0, 0, 30);
         cameraGroup.add(camera);
 
         const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: "high-performance" });
@@ -317,113 +317,53 @@
         rimLight.position.set(-10, 5, -10);
         scene.add(rimLight);
 
-        // Dedicated Accent Light for Hero (Red Magma) at y = 0
+        // Dedicated Accent Light for Hero (Red Magma) at (0, 0, 15)
         const obj1Light = new THREE.PointLight(0xff3300, 48, 25);
-        obj1Light.position.set(0, 0, 6);
+        obj1Light.position.set(0, 0, 21);
         scene.add(obj1Light);
 
-        // Dedicated Accent Light for Case 1 (Vibrant Yellow) at y = -14
-        const obj2Light = new THREE.PointLight(0xffcc00, 6, 20);
-        obj2Light.position.set(0, -14, 8);
+        // Dedicated Accent Light for Case 1 (Vibrant Yellow) at (12, -8, -5)
+        const obj2Light = new THREE.PointLight(0xffcc00, 12, 20);
+        obj2Light.position.set(12, -8, 2);
         scene.add(obj2Light);
 
-        // Dedicated Accent Light for Case 2 (Electric Cyan) at y = -28
-        const obj3Light = new THREE.PointLight(0x00e5ff, 6, 20);
-        obj3Light.position.set(0, -28, 8);
+        // Dedicated Accent Light for Case 2 (Electric Cyan) at (-10, -16, -12)
+        const obj3Light = new THREE.PointLight(0x00e5ff, 12, 20);
+        obj3Light.position.set(-10, -16, -5);
         scene.add(obj3Light);
 
         // ==========================================
-        // 3.5 3D Mountain Horizon & Spatial Terrain Landscape (Igloo-Style 3D Environment)
+        // 3.5 Central World Background Group (Cavern Anchor)
         // ==========================================
         const bgGroup = new THREE.Group();
         scene.add(bgGroup);
 
-        // 1. Procedural 3D Mountain Terrain Mesh
-        const terrainGeo = new THREE.PlaneGeometry(160, 120, 64, 48);
-        const posAttr = terrainGeo.attributes.position;
-
-        // Displace vertices to form natural mountain peaks and ridges
-        for (let i = 0; i < posAttr.count; i++) {
-            const x = posAttr.getX(i);
-            const y = posAttr.getY(i);
-            const distFromCenter = Math.abs(x);
-            // Higher mountain peaks on left & right sides, valley in center behind monoliths
-            const peakHeight = Math.sin(x * 0.08) * 8 + Math.cos(y * 0.12) * 6 + (distFromCenter * 0.18);
-            posAttr.setZ(i, peakHeight);
-        }
-        terrainGeo.computeVertexNormals();
-
-        const terrainMat = new THREE.MeshStandardMaterial({
-            color: 0x1e2433,        // Slate Ice Grey
-            roughness: 0.75,
-            metalness: 0.15,
-            emissive: 0x090d16,     // Soft Deep Ambient Glow
-            flatShading: true       // Low-poly faceted ice mountain aesthetic
-        });
-
-        const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
-        terrainMesh.rotation.x = -Math.PI / 2.3; // Tilted back to form horizon background
-        terrainMesh.position.set(0, -10, -25);
-        bgGroup.add(terrainMesh);
-
-        // 2. Additional Distant Mountain Peak Layer (Background Scale)
-        const bgMountainGeo = new THREE.ConeGeometry(30, 25, 6);
-        const bgMountainMat = new THREE.MeshStandardMaterial({
-            color: 0x161b28,
-            roughness: 0.85,
-            flatShading: true,
-            emissive: 0x060911
-        });
-
-        // Left Mountain Peak
-        const leftPeak = new THREE.Mesh(bgMountainGeo, bgMountainMat);
-        leftPeak.position.set(-35, 5, -35);
-        leftPeak.rotation.y = 0.5;
-        bgGroup.add(leftPeak);
-
-        // Right Mountain Peak
-        const rightPeak = new THREE.Mesh(bgMountainGeo, bgMountainMat);
-        rightPeak.position.set(38, 2, -38);
-        rightPeak.rotation.y = -0.4;
-        rightPeak.scale.set(1.2, 1.1, 1.2);
-        bgGroup.add(rightPeak);
-
-        // Lower Abyssal Mountain Peak (Section 2 & 3 Depth)
-        const case2Peak = new THREE.Mesh(bgMountainGeo, bgMountainMat);
-        case2Peak.position.set(-25, -25, -32);
-        case2Peak.rotation.y = 0.8;
-        case2Peak.scale.set(1.4, 1.3, 1.4);
-        bgGroup.add(case2Peak);
-
-        // 3. Dedicated Horizon Ridge Light (Highlights mountain edges clearly)
-        const horizonLight = new THREE.DirectionalLight(0x5577aa, 2.2);
-        horizonLight.position.set(0, 15, -15);
-        scene.add(horizonLight);
-
         // ==========================================
-        // 4. Object Containers (Spatial Architecture)
+        // 4. Object Containers (Volcanic Cavern Slopes Architecture)
         // ==========================================
-        // Object 1 (Hero) at (0, 0, 0) - Viewport 1
+        // Hero (Obj 1): Floating at Cavern Entrance
         const obj1Container = new THREE.Group();
-        obj1Container.position.set(0, 0, 0);
+        obj1Container.position.set(0, 0, 15);
         const obj1Scroll = new THREE.Group();
         const obj1Parallax = new THREE.Group();
         obj1Parallax.position.set(0, 0, 0);
         obj1Scroll.add(obj1Parallax);
         obj1Container.add(obj1Scroll);
 
-        // Object 2 (Case 1) at (0, -14, 0) - Viewport 2 (Exact 1 Viewport height down)
+        // Case 1 (Obj 2): Right Slope of Cavern
         const obj2Container = new THREE.Group();
-        obj2Container.position.set(0, -14, 0);
+        obj2Container.position.set(12, -8, -5);
+        obj2Container.rotation.y = Math.PI / 3;
         const obj2Scroll = new THREE.Group();
         const obj2Parallax = new THREE.Group();
         obj2Parallax.position.set(0, 0, 0);
         obj2Scroll.add(obj2Parallax);
         obj2Container.add(obj2Scroll);
 
-        // Object 3 (Case 2) at (0, -28, 0) - Viewport 3 (Exact 1 Viewport height down from Case 1)
+        // Case 2 (Obj 3): Left / Rear Slope of Cavern
         const obj3Container = new THREE.Group();
-        obj3Container.position.set(0, -28, 0);
+        obj3Container.position.set(-10, -16, -12);
+        obj3Container.rotation.y = -Math.PI / 1.5;
         const obj3Scroll = new THREE.Group();
         const obj3Parallax = new THREE.Group();
         obj3Parallax.position.set(0, 0, 0);
@@ -553,6 +493,28 @@
             }
             // Dismiss preloader as soon as Hero is ready!
             dismissPreloader();
+
+            // Load Central World (cave.glb - Volcanic Cavern)
+            gltfLoader.loadAsync('./cave.glb').then(gltfCave => {
+                if (gltfCave) {
+                    const caveModel = gltfCave.scene;
+                    caveModel.position.set(0, -15, 0);
+                    caveModel.scale.setScalar(8.0);
+
+                    caveModel.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            child.material = child.material.clone();
+                            child.material.roughness = 0.9;
+                            if (child.material.emissiveMap || child.material.map) {
+                                child.material.emissive.setHex(0xff3300);
+                                child.material.emissiveIntensity = 2.0;
+                            }
+                            child.material.needsUpdate = true;
+                        }
+                    });
+                    bgGroup.add(caveModel);
+                }
+            }).catch(e => console.error('Error loading cave.glb:', e));
 
             // Step 2: Stream Case 1 (2.glb) in Background
             gltfLoader.loadAsync('./2.glb').then(gltf2 => {
@@ -714,7 +676,7 @@
         scene.add(particlesMesh);
 
         // ==========================================
-        // 7. Camera Scrollytelling Timeline (Igloo-Style Spatial Universe Zoom Out)
+        // 7. Camera Scrollytelling Timeline (Volcanic Cavern Cinematic Spiral)
         // ==========================================
         const cameraTL = gsap.timeline({
             scrollTrigger: {
@@ -725,19 +687,16 @@
             }
         });
 
-        // Keyframe 1: Descent to Section 2 (Case 1) -> Pull back Z-axis (+6.0 Zoom Out) & descend (Y = -14)
+        // The camera descends along the cavern mountain and rotates 180 degrees around it
         cameraTL.to(cameraGroup.position, {
-            y: -14,
-            z: 6.0,
+            y: -16,
             ease: "power1.inOut"
-        });
+        }, 0);
 
-        // Keyframe 2: Descent to Section 3 (Case 2) -> Pull back Z-axis (+10.0 Vast Universe Zoom Out) & descend (Y = -28)
-        cameraTL.to(cameraGroup.position, {
-            y: -28,
-            z: 10.0,
+        cameraTL.to(cameraGroup.rotation, {
+            y: Math.PI, 
             ease: "power1.inOut"
-        });
+        }, 0);
 
         // ==========================================
         // 8. Post-Processing Pipeline (High-Speed Directional Motion Stretch Shader)
@@ -851,13 +810,13 @@
             const currentCamY = cameraGroup.position.y;
 
             // Hover Hero when camera is near Y = 0
-            isHoveredObj1 = hasMouseMoved && (Math.abs(currentCamY) < 5.0);
+            isHoveredObj1 = hasMouseMoved && (Math.abs(currentCamY) < 4.0);
 
-            // Hover Case 1 when camera is near Y = -14
-            isHoveredObj2 = hasMouseMoved && (Math.abs(currentCamY - (-14)) < 5.0);
+            // Hover Case 1 when camera is near Y = -8
+            isHoveredObj2 = hasMouseMoved && (Math.abs(currentCamY - (-8)) < 4.0);
 
-            // Hover Case 2 when camera is near Y = -28
-            isHoveredObj3 = hasMouseMoved && (Math.abs(currentCamY - (-28)) < 5.0);
+            // Hover Case 2 when camera is near Y = -16
+            isHoveredObj3 = hasMouseMoved && (Math.abs(currentCamY - (-16)) < 4.0);
 
             const desiredCursor = (isHoveredObj1 || isHoveredObj2 || isHoveredObj3) ? 'pointer' : 'default';
             if (document.body.style.cursor !== desiredCursor) {
