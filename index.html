@@ -78,6 +78,21 @@
         .cyan-line { background: rgba(0, 229, 255, 0.4); }
         .label { position: absolute; font-family: monospace; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.7); text-transform: uppercase; white-space: nowrap; }
 
+        /* Igloo Dotted Spatial Grid Matrix (Fades in during section scroll) */
+        #spatial-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 2;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+            background-size: 36px 36px;
+            opacity: 0.25;
+            transition: opacity 0.8s ease;
+        }
+
         /* Mobile Responsive Adjustments */
         @media (max-width: 768px) {
             #modal-overlay {
@@ -112,6 +127,7 @@
 
     <!-- WebGL Background -->
     <div id="webgl-container"></div>
+    <div id="spatial-grid"></div>
 
     <!-- Top-Left Branding & Copyright -->
     <div style="position: fixed; top: 2rem; left: 2.5rem; z-index: 40; pointer-events: auto; font-family: monospace;">
@@ -652,21 +668,29 @@
         scene.add(particlesMesh);
 
         // ==========================================
-        // 7. Camera Scrollytelling Timeline (Synced to Smooth CSS Scroll Snap)
+        // 7. Camera Scrollytelling Timeline (Igloo-Style Spatial Universe Zoom Out)
         // ==========================================
         const cameraTL = gsap.timeline({
             scrollTrigger: {
                 trigger: "#scroll-proxy",
                 start: "top top",
                 end: "bottom bottom",
-                scrub: 0.5 // Crisp 0.5s camera inertia for smooth, responsive 60 FPS scrolling
+                scrub: 0.5 // Crisp 0.5s camera inertia for smooth 60-120 FPS tracking
             }
         });
 
-        // Linear descent of camera from y = 0 (Hero) to y = -28 (Case 2 / Viewport 3)
+        // Keyframe 1: Descent to Section 2 (Case 1) -> Pull back Z-axis (+6.0 Zoom Out) & descend (Y = -14)
+        cameraTL.to(cameraGroup.position, {
+            y: -14,
+            z: 6.0,
+            ease: "power1.inOut"
+        });
+
+        // Keyframe 2: Descent to Section 3 (Case 2) -> Pull back Z-axis (+10.0 Vast Universe Zoom Out) & descend (Y = -28)
         cameraTL.to(cameraGroup.position, {
             y: -28,
-            ease: "none"
+            z: 10.0,
+            ease: "power1.inOut"
         });
 
         // ==========================================
