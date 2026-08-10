@@ -113,6 +113,23 @@
     <!-- WebGL Background -->
     <div id="webgl-container"></div>
 
+    <!-- Top-Left Branding & Copyright -->
+    <div style="position: fixed; top: 2rem; left: 2.5rem; z-index: 40; pointer-events: auto; font-family: monospace;">
+        <div style="font-size: 1.6rem; font-weight: 700; letter-spacing: 5px; color: #ffffff; text-shadow: 0 0 16px rgba(255,255,255,0.4);">NSPD-2</div>
+        <div style="font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.45); margin-top: 6px; line-height: 1.5;">// Copyright © 2026<br>Spatial Architecture Studio.<br>All Rights Reserved.</div>
+    </div>
+
+    <!-- Top-Right Manifesto Header -->
+    <div style="position: fixed; top: 2rem; right: 2.5rem; z-index: 40; pointer-events: auto; font-family: monospace; text-align: right;">
+        <div style="font-size: 11px; letter-spacing: 3px; color: #ffcc00; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,204,0,0.5);">////// Manifesto</div>
+        <div style="font-size: 10px; letter-spacing: 1.5px; line-height: 1.6; color: rgba(255,255,255,0.6); max-width: 250px; margin-top: 8px;">Our mission is to build the next generation of consumer brands at the intersection of Spatial UI, AI, and WebGL.</div>
+    </div>
+
+    <!-- Bottom-Left Sound Toggle Button -->
+    <button id="sound-toggle" style="position: fixed; bottom: 2rem; left: 2.5rem; z-index: 40; background: rgba(10,10,16,0.65); border: 1px solid rgba(255,255,255,0.18); border-radius: 20px; padding: 10px 18px; color: rgba(255,255,255,0.85); font-family: monospace; font-size: 11px; letter-spacing: 2px; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px;">
+        <span id="sound-icon">🔇</span> <span id="sound-text">Sound: Off</span>
+    </button>
+
     <!-- Native CSS Scroll Snap Proxy (3 Sections) -->
     <div id="scroll-proxy">
         <section class="snap-section" id="section-1"></section>
@@ -953,6 +970,111 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
             composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==========================================
+        // 12. Spatial Web Audio Synthesizer Engine (Zero-Asset Instant Audio)
+        // ==========================================
+        let audioCtx = null;
+        let ambientOsc1 = null;
+        let ambientOsc2 = null;
+        let ambientGain = null;
+        let isSoundOn = false;
+
+        function initAudioEngine() {
+            if (audioCtx) return;
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+
+            audioCtx = new AudioContextClass();
+
+            // Lowpass Filter for Deep Sci-Fi Atmosphere
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(140, audioCtx.currentTime);
+
+            // Ambient Gain Node
+            ambientGain = audioCtx.createGain();
+            ambientGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+
+            // Dual Oscillators for Resonant Sub-Hum (35Hz & 70Hz)
+            ambientOsc1 = audioCtx.createOscillator();
+            ambientOsc1.type = 'sine';
+            ambientOsc1.frequency.setValueAtTime(35, audioCtx.currentTime);
+
+            ambientOsc2 = audioCtx.createOscillator();
+            ambientOsc2.type = 'sawtooth';
+            ambientOsc2.frequency.setValueAtTime(70, audioCtx.currentTime);
+
+            ambientOsc1.connect(filter);
+            ambientOsc2.connect(filter);
+            filter.connect(ambientGain);
+            ambientGain.connect(audioCtx.destination);
+
+            ambientOsc1.start();
+            ambientOsc2.start();
+        }
+
+        function playSpatialPulse(freq = 440, type = 'sine', duration = 0.15) {
+            if (!isSoundOn || !audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            if (!audioCtx) initAudioEngine();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            isSoundOn = !isSoundOn;
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+            const btn = document.getElementById('sound-toggle');
+
+            if (isSoundOn) {
+                icon.innerText = '🔊';
+                text.innerText = 'Sound: On';
+                btn.style.borderColor = '#00e5ff';
+                btn.style.color = '#ffffff';
+                btn.style.boxShadow = '0 0 12px rgba(0,229,255,0.4)';
+                if (ambientGain) {
+                    ambientGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.5);
+                }
+                playSpatialPulse(587.33, 'sine', 0.2); // D5 chime
+            } else {
+                icon.innerText = '🔇';
+                text.innerText = 'Sound: Off';
+                btn.style.borderColor = 'rgba(255,255,255,0.18)';
+                btn.style.color = 'rgba(255,255,255,0.85)';
+                btn.style.boxShadow = 'none';
+                if (ambientGain) {
+                    ambientGain.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 0.5);
+                }
+            }
+        }
+
+        document.getElementById('sound-toggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSound();
+        });
+
+        // Audio trigger pulse on click
+        window.addEventListener('click', () => {
+            if (isSoundOn) {
+                playSpatialPulse(329.63, 'triangle', 0.3); // E4 pulse
+            }
         });
     </script>
 </body>
