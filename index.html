@@ -72,9 +72,11 @@
         .dot { width: 4px; height: 4px; border-radius: 50%; box-shadow: 0 0 10px; }
         .dot.yellow { background: #ffcc00; box-shadow: 0 0 10px #ffcc00; }
         .dot.cyan { background: #00e5ff; box-shadow: 0 0 10px #00e5ff; }
+        .dot.red { background: #ff3300; box-shadow: 0 0 10px #ff3300; }
         .line { position: absolute; height: 1px; transform-origin: left center; }
         .yellow-line { background: rgba(255, 204, 0, 0.4); }
         .cyan-line { background: rgba(0, 229, 255, 0.4); }
+        .red-line { background: rgba(255, 51, 0, 0.4); }
         .label { position: absolute; font-family: monospace; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.7); text-transform: uppercase; white-space: nowrap; }
 
         /* Igloo Dotted Spatial Grid Matrix (Fades in during section scroll) */
@@ -154,29 +156,40 @@
 
     <!-- Spatial HUD Layer -->
     <div id="hud-layer" style="position: fixed; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; top: 0; left: 0;">
-        <div id="hud-hero" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;"></div>
+        <div id="hud-hero" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;">
+            <div class="spatial-point" style="top: 30%; left: 35%;">
+                <div class="dot red"></div>
+                <div class="line red-line" style="width: 80px; transform: rotate(-45deg);"></div>
+                <div class="label hud-btn-hero" style="transform: translate(-100px, -60px); pointer-events: auto; cursor: pointer;">CLAUDINEI SANTOS<br>ABOUT & PROFILE</div>
+            </div>
+            <div class="spatial-point" style="top: 70%; left: 65%;">
+                <div class="dot red"></div>
+                <div class="line red-line" style="width: 120px; transform: rotate(15deg);"></div>
+                <div class="label hud-btn-hero" style="transform: translate(140px, 10px); pointer-events: auto; cursor: pointer;">CLIQUE PARA EXPANDIR</div>
+            </div>
+        </div>
         <div id="hud-case1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;">
             <div class="spatial-point" style="top: 30%; left: 35%;">
                 <div class="dot yellow"></div>
                 <div class="line yellow-line" style="width: 80px; transform: rotate(-45deg);"></div>
-                <div class="label" style="transform: translate(-100px, -60px);">CLIENT_01<br>TIPO: SAAS</div>
+                <div class="label hud-btn-case1" style="transform: translate(-100px, -60px); pointer-events: auto; cursor: pointer;">GOOD EGGS REFRESH<br>TIPO: UI ARCHITECTURE</div>
             </div>
             <div class="spatial-point" style="top: 70%; left: 65%;">
                 <div class="dot yellow"></div>
                 <div class="line yellow-line" style="width: 120px; transform: rotate(15deg);"></div>
-                <div class="label" style="transform: translate(140px, 10px);">CLIQUE PARA EXPANDIR</div>
+                <div class="label hud-btn-case1" style="transform: translate(140px, 10px); pointer-events: auto; cursor: pointer;">CLIQUE PARA EXPANDIR</div>
             </div>
         </div>
         <div id="hud-case2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;">
             <div class="spatial-point" style="top: 30%; left: 35%;">
                 <div class="dot cyan"></div>
                 <div class="line cyan-line" style="width: 80px; transform: rotate(-45deg);"></div>
-                <div class="label" style="transform: translate(-100px, -60px);">CLIENT_02<br>TIPO: AI PLATFORM</div>
+                <div class="label hud-btn-case2" style="transform: translate(-100px, -60px); pointer-events: auto; cursor: pointer;">ANTIGRAVITY PLATFORM<br>TIPO: FULL-STACK ENG</div>
             </div>
             <div class="spatial-point" style="top: 70%; left: 65%;">
                 <div class="dot cyan"></div>
                 <div class="line cyan-line" style="width: 120px; transform: rotate(15deg);"></div>
-                <div class="label" style="transform: translate(140px, 10px);">CLIQUE PARA EXPANDIR</div>
+                <div class="label hud-btn-case2" style="transform: translate(140px, 10px); pointer-events: auto; cursor: pointer;">CLIQUE PARA EXPANDIR</div>
             </div>
         </div>
     </div>
@@ -972,8 +985,10 @@
             particlesGeo.attributes.position.needsUpdate = true;
 
             // HUD Layer Opacity Sync (Zero Performance Overhead)
+            const hudHero = document.getElementById('hud-hero');
             const hudCase1 = document.getElementById('hud-case1');
             const hudCase2 = document.getElementById('hud-case2');
+            if (hudHero) hudHero.style.opacity = isHoveredObj1 ? '1' : '0';
             if (hudCase1) hudCase1.style.opacity = isHoveredObj2 ? '1' : '0';
             if (hudCase2) hudCase2.style.opacity = isHoveredObj3 ? '1' : '0';
 
@@ -990,25 +1005,80 @@
         window.addEventListener('click', (e) => {
             if (activeExpandedObj) return; // Modal already open
 
-            if (isHoveredObj2) {
+            if (isHoveredObj1) {
                 openCaseModal(
-                    "CLIENT 01: SAAS REFRESH",
-                    "A visual breakdown of the cloud infrastructure, spatial design tokens, and systematic refresh implemented for Client 01.",
-                    "[ SAAS PLATFORM SPEC ]",
+                    "CLAUDINEI SANTOS",
+                    "Senior Product Designer & Front-End Developer with over 20 years of experience shaping immersive digital experiences and scalable UI systems.",
+                    "[ CREATIVE TECHNOLOGIST ]",
+                    "#ff3300",
+                    "RED MAGMA",
+                    obj1Parallax
+                );
+            } else if (isHoveredObj2) {
+                openCaseModal(
+                    "GOOD EGGS REFRESH",
+                    "Strategic UI color system refresh and mobile-responsive product catalog redesign targeting Gen Z & Millennials.",
+                    "[ UI ARCHITECTURE ]",
                     "#ffcc00",
                     "YELLOW NEON",
                     obj2Parallax
                 );
             } else if (isHoveredObj3) {
                 openCaseModal(
-                    "CLIENT 02: AI PLATFORM",
-                    "Deep dive into the neural architecture, real-time spatial data visualizer, and custom web interface for Client 02.",
-                    "[ AI PLATFORM SPEC ]",
+                    "ANTIGRAVITY PLATFORM",
+                    "Flutter-based application architecture integrated with advanced Model Context Protocols (MCPs).",
+                    "[ FULL-STACK ENG ]",
                     "#00e5ff",
                     "CYAN ELECTRIC",
                     obj3Parallax
                 );
             }
+        });
+
+        // Direct click hitboxes on HUD buttons for instant accessibility
+        document.querySelectorAll('.hud-btn-hero').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (activeExpandedObj) return;
+                openCaseModal(
+                    "CLAUDINEI SANTOS",
+                    "Senior Product Designer & Front-End Developer with over 20 years of experience shaping immersive digital experiences and scalable UI systems.",
+                    "[ CREATIVE TECHNOLOGIST ]",
+                    "#ff3300",
+                    "RED MAGMA",
+                    obj1Parallax
+                );
+            });
+        });
+
+        document.querySelectorAll('.hud-btn-case1').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (activeExpandedObj) return;
+                openCaseModal(
+                    "GOOD EGGS REFRESH",
+                    "Strategic UI color system refresh and mobile-responsive product catalog redesign targeting Gen Z & Millennials.",
+                    "[ UI ARCHITECTURE ]",
+                    "#ffcc00",
+                    "YELLOW NEON",
+                    obj2Parallax
+                );
+            });
+        });
+
+        document.querySelectorAll('.hud-btn-case2').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (activeExpandedObj) return;
+                openCaseModal(
+                    "ANTIGRAVITY PLATFORM",
+                    "Flutter-based application architecture integrated with advanced Model Context Protocols (MCPs).",
+                    "[ FULL-STACK ENG ]",
+                    "#00e5ff",
+                    "CYAN ELECTRIC",
+                    obj3Parallax
+                );
+            });
         });
 
         function openCaseModal(title, description, tag, lumColor, lumText, targetObj) {
