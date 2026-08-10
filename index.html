@@ -774,23 +774,30 @@
         function animate() {
             const time = clock.getElapsedTime();
 
-            // --- Zero-CPU 2D Radial Proximity Check ---
-            const mouseDistFromCenter = hasMouseMoved ? Math.sqrt(mouseX * mouseX + mouseY * mouseY) : 999;
+            // --- Full-Canvas Section Hover (Active across the entire screen without mouse snap lock) ---
             const currentCamY = cameraGroup.position.y;
 
-            // Hover Hero when camera is near Y = 0 and cursor is near center
-            isHoveredObj1 = (Math.abs(currentCamY) < 5.0) && (mouseDistFromCenter < 0.45);
+            // Hover Hero when camera is near Y = 0
+            isHoveredObj1 = hasMouseMoved && (Math.abs(currentCamY) < 5.0);
 
-            // Hover Case 1 when camera is near Y = -14 and cursor is near center
-            isHoveredObj2 = (Math.abs(currentCamY - (-14)) < 5.0) && (mouseDistFromCenter < 0.45);
+            // Hover Case 1 when camera is near Y = -14
+            isHoveredObj2 = hasMouseMoved && (Math.abs(currentCamY - (-14)) < 5.0);
 
-            // Hover Case 2 when camera is near Y = -28 and cursor is near center
-            isHoveredObj3 = (Math.abs(currentCamY - (-28)) < 5.0) && (mouseDistFromCenter < 0.45);
+            // Hover Case 2 when camera is near Y = -28
+            isHoveredObj3 = hasMouseMoved && (Math.abs(currentCamY - (-28)) < 5.0);
 
             const desiredCursor = (isHoveredObj1 || isHoveredObj2 || isHoveredObj3) ? 'pointer' : 'default';
             if (document.body.style.cursor !== desiredCursor) {
                 document.body.style.cursor = desiredCursor;
             }
+
+            // --- Full-Canvas Gyro Sway & Dynamic 3D Tilt (Interactive across whole screen) ---
+            const camSwayX = hasMouseMoved ? (mouseX * 1.4) : 0;
+            const camSwayY = hasMouseMoved ? (mouseY * 0.8) : 0;
+            camera.position.x += (camSwayX - camera.position.x) * 0.05;
+            camera.position.y += (camSwayY - camera.position.y) * 0.05;
+            camera.rotation.y = -camera.position.x * 0.04;
+            camera.rotation.x = camera.position.y * 0.04;
 
             // --- Smooth Parent Group Matrix Scale & Light Surge (Zero-Traversal) ---
             const targetLight1 = isHoveredObj1 ? 160.0 : 48.0;
@@ -818,14 +825,6 @@
             if (obj3Light) {
                 obj3Light.intensity += (targetLight3 - obj3Light.intensity) * 0.08;
             }
-
-            // --- Igloo-Style Camera Gyro Sway & Environment Parallax ---
-            const camSwayX = hasMouseMoved ? (mouseX * 0.8) : 0;
-            const camSwayY = hasMouseMoved ? (mouseY * 0.4) : 0;
-            camera.position.x += (camSwayX - camera.position.x) * 0.04;
-            camera.position.y += (camSwayY - camera.position.y) * 0.04;
-            camera.rotation.y = -camera.position.x * 0.03;
-            camera.rotation.x = camera.position.y * 0.03;
 
             // --- Dynamic Bloom Focus Flare Surge on Hover ---
             const isAnyHovered = isHoveredObj1 || isHoveredObj2 || isHoveredObj3;
