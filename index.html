@@ -727,7 +727,7 @@
         });
 
         // ==========================================
-        // 8. Post-Processing Pipeline (Optimized for 60-120 FPS)
+        // 8. Post-Processing Pipeline (High-Speed Directional Motion Stretch Shader)
         // ==========================================
         const composer = new EffectComposer(renderer);
         composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -742,9 +742,45 @@
         );
         composer.addPass(bloomPass);
 
-        const rgbShiftPass = new ShaderPass(RGBShiftShader);
-        rgbShiftPass.uniforms['amount'].value = 0.0005;
-        composer.addPass(rgbShiftPass);
+        // Custom High-Performance Directional Speed Stretch Shader (Warp / Motion Blur)
+        const SpeedStretchShader = {
+            uniforms: {
+                'tDiffuse': { value: null },
+                'uSpeed': { value: 0.0 },
+                'uDirection': { value: new THREE.Vector2(0.0, 1.0) }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform float uSpeed;
+                uniform vec2 uDirection;
+                varying vec2 vUv;
+
+                void main() {
+                    vec4 color = vec4(0.0);
+                    float total = 0.0;
+                    vec2 dir = uDirection * uSpeed * 0.035;
+
+                    for (float i = -6.0; i <= 6.0; i += 1.0) {
+                        float weight = 1.0 - abs(i) / 7.0;
+                        vec2 offset = vUv + dir * (i / 6.0);
+                        color += texture2D(tDiffuse, offset) * weight;
+                        total += weight;
+                    }
+
+                    gl_FragColor = color / total;
+                }
+            `
+        };
+
+        const speedStretchPass = new ShaderPass(SpeedStretchShader);
+        composer.addPass(speedStretchPass);
 
         // ==========================================
         // 9. Ultra-Lightweight Screen Proximity Hover (Zero Raycaster Overhead)
@@ -835,9 +871,9 @@
             bloomPass.strength += (targetBloomStrength - bloomPass.strength) * 0.06;
             bloomPass.threshold += (targetBloomThreshold - bloomPass.threshold) * 0.06;
 
-            // --- Igloo-Style Dynamic RGB Chromatic Aberration Glitch Surge on Scroll ---
-            const targetRGBShift = 0.0005 + Math.min(0.022, currentScrollVelocity * 0.0018);
-            rgbShiftPass.uniforms['amount'].value += (targetRGBShift - rgbShiftPass.uniforms['amount'].value) * 0.15;
+            // --- Directional Motion Blur Speed Stretch (Warp Stretch during Scroll) ---
+            const targetSpeedStretch = Math.min(1.0, currentScrollVelocity * 0.04);
+            speedStretchPass.uniforms['uSpeed'].value += (targetSpeedStretch - speedStretchPass.uniforms['uSpeed'].value) * 0.15;
 
             // Subtle Mouse Parallax (only Y rotation when mouse is active)
             targetX = hasMouseMoved ? (mouseX * 0.1) : 0;
