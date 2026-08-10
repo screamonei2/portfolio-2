@@ -742,12 +742,12 @@
         );
         composer.addPass(bloomPass);
 
-        // Custom Iconic Violent Radial Wormhole Hyperdrive Shader
-        const WormholeWarpShader = {
+        // Iconic Evan Wallace (glfx.js) ZoomBlur Shader (Dithered Radial Noise Blur)
+        const ZoomBlurShader = {
             uniforms: {
                 'tDiffuse': { value: null },
-                'uSpeed': { value: 0.0 },
-                'uCenter': { value: new THREE.Vector2(0.5, 0.5) }
+                'uCenter': { value: new THREE.Vector2(0.5, 0.5) },
+                'uStrength': { value: 0.0 }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -758,52 +758,51 @@
             `,
             fragmentShader: `
                 uniform sampler2D tDiffuse;
-                uniform float uSpeed;
                 uniform vec2 uCenter;
+                uniform float uStrength;
                 varying vec2 vUv;
 
+                float random(vec3 scale, float seed) {
+                    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);
+                }
+
                 void main() {
-                    vec2 uv = vUv;
-                    vec2 toCenter = uv - uCenter;
-                    float dist = length(toCenter);
-                    
-                    // Violent Wormhole Radial Velocity Force
-                    float warpFactor = uSpeed * 0.18 * pow(max(0.1, dist), 0.7);
-                    
-                    // Vortex Swirl Rotation Angle during Wormhole Entry
-                    float angle = uSpeed * 0.5 * (1.0 - dist);
-                    float cosA = cos(angle);
-                    float sinA = sin(angle);
-                    mat2 rot = mat2(cosA, -sinA, sinA, cosA);
-                    vec2 rotatedToCenter = rot * toCenter;
+                    vec2 tUv = vUv;
+                    float strength = uStrength;
 
-                    vec4 color = vec4(0.0);
-                    float total = 0.0;
-                    
-                    // 16-sample Radial Tunnel Zoom Stretch Blur
-                    for (float i = 0.0; i < 16.0; i += 1.0) {
-                        float scale = 1.0 - (i / 15.0) * warpFactor;
-                        float weight = 1.0 - (i / 16.0);
-                        vec2 sampleUv = uCenter + rotatedToCenter * scale;
-                        
-                        // Chromatic Channel Dispersion for Iconic Sci-Fi Flare
-                        vec4 tex;
-                        tex.r = texture2D(tDiffuse, uCenter + (sampleUv - uCenter) * (1.0 + warpFactor * 0.08)).r;
-                        tex.g = texture2D(tDiffuse, sampleUv).g;
-                        tex.b = texture2D(tDiffuse, uCenter + (sampleUv - uCenter) * (1.0 - warpFactor * 0.08)).b;
-                        tex.a = 1.0;
+                    if (abs(strength) > 0.001) {
+                        vec4 color = vec4(0.0);
+                        float total = 0.0;
+                        vec2 toCenter = uCenter - tUv;
 
-                        color += tex * weight;
-                        total += weight;
+                        /* randomize the lookup values to hide the fixed number of samples */
+                        float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);
+
+                        for (float t = 0.0; t <= 20.0; t++) {
+                            float percent = (t + offset) / 20.0;
+                            float weight = 2.0 * (percent - percent * percent);
+                            vec4 texel = texture2D(tDiffuse, tUv + toCenter * percent * strength);
+
+                            /* switch to pre-multiplied alpha to correctly blur transparent images */
+                            texel.rgb *= texel.a;
+
+                            color += texel * weight;
+                            total += weight;
+                        }
+
+                        gl_FragColor = color / total;
+
+                        /* switch back from pre-multiplied alpha */
+                        gl_FragColor.rgb /= gl_FragColor.a + 0.00001;
+                    } else {
+                        gl_FragColor = texture2D(tDiffuse, tUv);
                     }
-
-                    gl_FragColor = color / total;
                 }
             `
         };
 
-        const wormholePass = new ShaderPass(WormholeWarpShader);
-        composer.addPass(wormholePass);
+        const zoomBlurPass = new ShaderPass(ZoomBlurShader);
+        composer.addPass(zoomBlurPass);
 
         // ==========================================
         // 9. Ultra-Lightweight Screen Proximity Hover (Zero Raycaster Overhead)
@@ -894,9 +893,15 @@
             bloomPass.strength += (targetBloomStrength - bloomPass.strength) * 0.06;
             bloomPass.threshold += (targetBloomThreshold - bloomPass.threshold) * 0.06;
 
-            // --- Violent Radial Wormhole Entry Distortion (Vortex Tunnel Stretch during Scroll) ---
-            const targetWormholeSpeed = Math.min(1.0, currentScrollVelocity * 0.05);
-            wormholePass.uniforms['uSpeed'].value += (targetWormholeSpeed - wormholePass.uniforms['uSpeed'].value) * 0.15;
+            // --- Evan Wallace glfx.js ZoomBlur Strength & Mouse Center Tracking ---
+            const targetZoomStrength = Math.min(0.85, currentScrollVelocity * 0.035);
+            zoomBlurPass.uniforms['uStrength'].value += (targetZoomStrength - zoomBlurPass.uniforms['uStrength'].value) * 0.15;
+            if (hasMouseMoved) {
+                const targetCenterX = mouseX * 0.4 + 0.5;
+                const targetCenterY = mouseY * 0.4 + 0.5;
+                zoomBlurPass.uniforms['uCenter'].value.x += (targetCenterX - zoomBlurPass.uniforms['uCenter'].value.x) * 0.1;
+                zoomBlurPass.uniforms['uCenter'].value.y += (targetCenterY - zoomBlurPass.uniforms['uCenter'].value.y) * 0.1;
+            }
 
             // Subtle Mouse Parallax (only Y rotation when mouse is active)
             targetX = hasMouseMoved ? (mouseX * 0.1) : 0;
