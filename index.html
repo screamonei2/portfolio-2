@@ -406,20 +406,13 @@
         }
 
         // ==========================================
-        // 5. Load 3D Models & Materials (with Preloader & Hover Caching)
+        // 5. Progressive Async Load 3D Models & Materials (Instant Initial Access)
         // ==========================================
-        const loadingManager = new THREE.LoadingManager();
         const loaderBar = document.getElementById('loader-bar');
         const loaderPercent = document.getElementById('loader-percent');
         const loaderScreen = document.getElementById('loader-screen');
 
-        loadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
-            const progress = Math.round((itemsLoaded / itemsTotal) * 100);
-            if (loaderBar) loaderBar.style.width = progress + '%';
-            if (loaderPercent) loaderPercent.innerText = progress + '%';
-        };
-
-        loadingManager.onLoad = () => {
+        function dismissPreloader() {
             if (loaderBar) loaderBar.style.width = '100%';
             if (loaderPercent) loaderPercent.innerText = '100%';
             setTimeout(() => {
@@ -427,10 +420,10 @@
                     loaderScreen.style.opacity = '0';
                     loaderScreen.style.visibility = 'hidden';
                 }
-            }, 400);
-        };
+            }, 250);
+        }
 
-        const gltfLoader = new GLTFLoader(loadingManager);
+        const gltfLoader = new GLTFLoader();
         let soulStoneModel1 = null;
         let soulStoneModel2 = null;
         let soulStoneModel3 = null;
@@ -444,17 +437,10 @@
 
         const baseModelScaleFactor = isMobile ? 3.6 : 5.0;
 
-        Promise.all([
-            gltfLoader.loadAsync('./1.glb').catch(e => { console.error('Error loading 1.glb:', e); return null; }),
-            gltfLoader.loadAsync('./2.glb').catch(e => { console.error('Error loading 2.glb:', e); return null; }),
-            gltfLoader.loadAsync('./3.glb').catch(e => { console.error('Error loading 3.glb:', e); return null; })
-        ]).then(([gltf1, gltf2, gltf3]) => {
-
-            // --- Model 1 Setup (Hero) ---
+        // Step 1: Load Hero Model (1.glb - 85MB) first for instant initial page access!
+        gltfLoader.loadAsync('./1.glb').then(gltf1 => {
             if (gltf1) {
                 soulStoneModel1 = gltf1.scene;
-
-                // Center and scale model BEFORE adding to parent container with Y offset
                 const box1 = new THREE.Box3().setFromObject(soulStoneModel1);
                 const center1 = box1.getCenter(new THREE.Vector3());
                 soulStoneModel1.position.sub(center1);
@@ -470,13 +456,11 @@
                         targetMeshes1.push(child);
                         child.material = child.material.clone();
 
-                        // Matte stone material (High roughness & low envMap to eliminate harsh white specular glare)
                         child.material.color.setHex(0xffffff);
                         child.material.roughness = 0.85;
                         child.material.metalness = 0.05;
                         child.material.envMapIntensity = 0.3;
 
-                        // Isolate emission strictly to bright cracks via threshold mask
                         if (child.material.map) {
                             child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
                             child.material.emissive.setHex(0xff3300); // Red Magma
@@ -488,84 +472,87 @@
                     }
                 });
             }
+            // Dismiss preloader as soon as Hero is ready!
+            dismissPreloader();
 
-            // --- Model 2 Setup (Case 1) ---
-            if (gltf2) {
-                soulStoneModel2 = gltf2.scene;
+            // Step 2: Stream Case 1 (2.glb) in Background
+            gltfLoader.loadAsync('./2.glb').then(gltf2 => {
+                if (gltf2) {
+                    soulStoneModel2 = gltf2.scene;
+                    const box2 = new THREE.Box3().setFromObject(soulStoneModel2);
+                    const center2 = box2.getCenter(new THREE.Vector3());
+                    soulStoneModel2.position.sub(center2);
 
-                // Center and scale model BEFORE adding to parent container with Y=-14 offset
-                const box2 = new THREE.Box3().setFromObject(soulStoneModel2);
-                const center2 = box2.getCenter(new THREE.Vector3());
-                soulStoneModel2.position.sub(center2);
+                    const size2 = box2.getSize(new THREE.Vector3()).length();
+                    soulStoneModel2.userData.baseScale = baseModelScaleFactor / size2;
+                    soulStoneModel2.scale.setScalar(soulStoneModel2.userData.baseScale);
 
-                const size2 = box2.getSize(new THREE.Vector3()).length();
-                soulStoneModel2.userData.baseScale = baseModelScaleFactor / size2;
-                soulStoneModel2.scale.setScalar(soulStoneModel2.userData.baseScale);
+                    obj2Parallax.add(soulStoneModel2);
 
-                obj2Parallax.add(soulStoneModel2);
+                    soulStoneModel2.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            targetMeshes2.push(child);
+                            child.material = child.material.clone();
 
-                soulStoneModel2.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        targetMeshes2.push(child);
-                        child.material = child.material.clone();
+                            child.material.color.setHex(0xffffff);
+                            child.material.roughness = 0.85;
+                            child.material.metalness = 0.05;
+                            child.material.envMapIntensity = 0.1;
 
-                        // Matte stone material (High roughness & low envMap to eliminate harsh white specular glare)
-                        child.material.color.setHex(0xffffff);
-                        child.material.roughness = 0.85;
-                        child.material.metalness = 0.05;
-                        child.material.envMapIntensity = 0.1;
+                            if (child.material.map) {
+                                child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
+                                child.material.emissive.setHex(0xffcc00); // Vibrant Yellow
+                                child.material.emissiveIntensity = 1.0;
+                                emissiveMats2.push(child.material);
+                            }
 
-                        // Isolate emission strictly to bright cracks via threshold mask
-                        if (child.material.map) {
-                            child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
-                            child.material.emissive.setHex(0xffcc00); // Vibrant Yellow
-                            child.material.emissiveIntensity = 1.0;
-                            emissiveMats2.push(child.material);
+                            child.material.needsUpdate = true;
                         }
+                    });
+                }
+            }).catch(e => console.error('Error loading 2.glb:', e));
 
-                        child.material.needsUpdate = true;
-                    }
-                });
-            }
+            // Step 3: Stream Case 2 (3.glb) in Background
+            gltfLoader.loadAsync('./3.glb').then(gltf3 => {
+                if (gltf3) {
+                    soulStoneModel3 = gltf3.scene;
+                    const box3 = new THREE.Box3().setFromObject(soulStoneModel3);
+                    const center3 = box3.getCenter(new THREE.Vector3());
+                    soulStoneModel3.position.sub(center3);
 
-            // --- Model 3 Setup (Case 2 - Loaded from 3.glb at Y=-28) ---
-            if (gltf3) {
-                soulStoneModel3 = gltf3.scene;
+                    const size3 = box3.getSize(new THREE.Vector3()).length();
+                    soulStoneModel3.userData.baseScale = baseModelScaleFactor / size3;
+                    soulStoneModel3.scale.setScalar(soulStoneModel3.userData.baseScale);
 
-                // Center and scale model BEFORE adding to parent container with Y=-28 offset
-                const box3 = new THREE.Box3().setFromObject(soulStoneModel3);
-                const center3 = box3.getCenter(new THREE.Vector3());
-                soulStoneModel3.position.sub(center3);
+                    obj3Parallax.add(soulStoneModel3);
 
-                const size3 = box3.getSize(new THREE.Vector3()).length();
-                soulStoneModel3.userData.baseScale = baseModelScaleFactor / size3;
-                soulStoneModel3.scale.setScalar(soulStoneModel3.userData.baseScale);
+                    soulStoneModel3.traverse((child) => {
+                        if (child.isMesh && child.material) {
+                            targetMeshes3.push(child);
+                            child.material = child.material.clone();
 
-                obj3Parallax.add(soulStoneModel3);
+                            child.material.color.setHex(0xffffff);
+                            child.material.roughness = 0.85;
+                            child.material.metalness = 0.05;
+                            child.material.envMapIntensity = 0.1;
 
-                soulStoneModel3.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        targetMeshes3.push(child);
-                        child.material = child.material.clone();
+                            if (child.material.map) {
+                                child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
+                                child.material.emissive.setHex(0x00e5ff); // Cyan Electric
+                                child.material.emissiveIntensity = 1.0;
+                                emissiveMats3.push(child.material);
+                            }
 
-                        // Matte stone material (High roughness & low envMap to eliminate harsh white specular glare)
-                        child.material.color.setHex(0xffffff);
-                        child.material.roughness = 0.85;
-                        child.material.metalness = 0.05;
-                        child.material.envMapIntensity = 0.1;
-
-                        // Isolate emission strictly to bright cracks via threshold mask
-                        if (child.material.map) {
-                            child.material.emissiveMap = createThresholdEmissiveMap(child.material.map, 0.55);
-                            child.material.emissive.setHex(0x00e5ff); // Electric Cyan
-                            child.material.emissiveIntensity = 1.0;
-                            emissiveMats3.push(child.material);
+                            child.material.needsUpdate = true;
                         }
+                    });
+                }
+            }).catch(e => console.error('Error loading 3.glb:', e));
 
-                        child.material.needsUpdate = true;
-                    }
-                });
-            }
+        }).catch(e => {
+            console.error('Error loading 1.glb:', e);
+            dismissPreloader();
+        });
 
             ScrollTrigger.refresh();
         });
@@ -594,9 +581,9 @@
         }
 
         // ==========================================
-        // 6. Interactive RPG Bonfire Embers (Particles Setup)
+        // 6. Interactive RPG Bonfire Embers (Particles Setup - Lightweight 600 Particles)
         // ==========================================
-        const pCount = isMobile ? 800 : 2000;
+        const pCount = isMobile ? 300 : 600;
         const particlesGeo = new THREE.BufferGeometry();
         const pArray = new Float32Array(pCount * 3);
         const pColors = new Float32Array(pCount * 3);
@@ -658,7 +645,7 @@
                 trigger: "#scroll-proxy",
                 start: "top top",
                 end: "bottom bottom",
-                scrub: 1.2 // Smooth 1.2s camera inertia for ultra-elegant floating landing
+                scrub: 0.5 // Crisp 0.5s camera inertia for smooth, responsive 60 FPS scrolling
             }
         });
 
@@ -669,9 +656,10 @@
         });
 
         // ==========================================
-        // 8. Post-Processing Pipeline
+        // 8. Post-Processing Pipeline (Optimized for 60-120 FPS)
         // ==========================================
         const composer = new EffectComposer(renderer);
+        composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         composer.addPass(new RenderPass(scene, camera));
 
         // UnrealBloomPass tuned to isolate emissive highlights without blowing out the dark background
@@ -682,17 +670,6 @@
             0.80  // Threshold
         );
         composer.addPass(bloomPass);
-
-        if (!isMobile) {
-            const bokehPass = new BokehPass(scene, camera, {
-                focus: 18.0,
-                aperture: 0.0001,
-                maxblur: 0.015,
-                width: window.innerWidth,
-                height: window.innerHeight
-            });
-            composer.addPass(bokehPass);
-        }
 
         const rgbShiftPass = new ShaderPass(RGBShiftShader);
         rgbShiftPass.uniforms['amount'].value = 0.0005;
