@@ -318,41 +318,72 @@
         scene.add(obj3Light);
 
         // ==========================================
-        // 3.5 Abyssal Monoliths (Depth & Parallax Anchors)
+        // 3.5 3D Mountain Horizon & Spatial Terrain Landscape (Igloo-Style 3D Environment)
         // ==========================================
-        const monolithGeo = new THREE.BoxGeometry(4, 40, 4);
-        const monolithMat = new THREE.MeshStandardMaterial({
-            color: 0x050505, // Quase invisível, misturando com o fundo
-            roughness: 0.9,
-            metalness: 0.1,
-            envMapIntensity: 0.2
-        });
-
         const bgGroup = new THREE.Group();
         scene.add(bgGroup);
 
-        // Gerar pilares espalhados pelo abismo
-        for (let i = 0; i < 25; i++) {
-            const mesh = new THREE.Mesh(monolithGeo, monolithMat);
+        // 1. Procedural 3D Mountain Terrain Mesh
+        const terrainGeo = new THREE.PlaneGeometry(160, 120, 64, 48);
+        const posAttr = terrainGeo.attributes.position;
 
-            // Distribuir no eixo X (laterais), Y (altura total do scroll) e Z (fundo)
-            const x = (Math.random() - 0.5) * 60; // Espalhados horizontalmente
-            const y = (Math.random() - 0.5) * 80 - 20; // Cobrindo de +20 a -60 no eixo Y
-            const z = -20 - Math.random() * 40; // Profundidade Z (-20 a -60)
-
-            mesh.position.set(x, y, z);
-
-            // Rotações randômicas para não parecerem blocos perfeitos
-            mesh.rotation.y = Math.random() * Math.PI;
-            mesh.rotation.x = (Math.random() - 0.5) * 0.2;
-            mesh.rotation.z = (Math.random() - 0.5) * 0.2;
-
-            // Variação massiva de escala
-            const scale = 0.5 + Math.random() * 2.5;
-            mesh.scale.set(scale, scale, scale);
-
-            bgGroup.add(mesh);
+        // Displace vertices to form natural mountain peaks and ridges
+        for (let i = 0; i < posAttr.count; i++) {
+            const x = posAttr.getX(i);
+            const y = posAttr.getY(i);
+            const distFromCenter = Math.abs(x);
+            // Higher mountain peaks on left & right sides, valley in center behind monoliths
+            const peakHeight = Math.sin(x * 0.08) * 8 + Math.cos(y * 0.12) * 6 + (distFromCenter * 0.18);
+            posAttr.setZ(i, peakHeight);
         }
+        terrainGeo.computeVertexNormals();
+
+        const terrainMat = new THREE.MeshStandardMaterial({
+            color: 0x1e2433,        // Slate Ice Grey
+            roughness: 0.75,
+            metalness: 0.15,
+            emissive: 0x090d16,     // Soft Deep Ambient Glow
+            flatShading: true       // Low-poly faceted ice mountain aesthetic
+        });
+
+        const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+        terrainMesh.rotation.x = -Math.PI / 2.3; // Tilted back to form horizon background
+        terrainMesh.position.set(0, -10, -25);
+        bgGroup.add(terrainMesh);
+
+        // 2. Additional Distant Mountain Peak Layer (Background Scale)
+        const bgMountainGeo = new THREE.ConeGeometry(30, 25, 6);
+        const bgMountainMat = new THREE.MeshStandardMaterial({
+            color: 0x161b28,
+            roughness: 0.85,
+            flatShading: true,
+            emissive: 0x060911
+        });
+
+        // Left Mountain Peak
+        const leftPeak = new THREE.Mesh(bgMountainGeo, bgMountainMat);
+        leftPeak.position.set(-35, 5, -35);
+        leftPeak.rotation.y = 0.5;
+        bgGroup.add(leftPeak);
+
+        // Right Mountain Peak
+        const rightPeak = new THREE.Mesh(bgMountainGeo, bgMountainMat);
+        rightPeak.position.set(38, 2, -38);
+        rightPeak.rotation.y = -0.4;
+        rightPeak.scale.set(1.2, 1.1, 1.2);
+        bgGroup.add(rightPeak);
+
+        // Lower Abyssal Mountain Peak (Section 2 & 3 Depth)
+        const case2Peak = new THREE.Mesh(bgMountainGeo, bgMountainMat);
+        case2Peak.position.set(-25, -25, -32);
+        case2Peak.rotation.y = 0.8;
+        case2Peak.scale.set(1.4, 1.3, 1.4);
+        bgGroup.add(case2Peak);
+
+        // 3. Dedicated Horizon Ridge Light (Highlights mountain edges clearly)
+        const horizonLight = new THREE.DirectionalLight(0x5577aa, 2.2);
+        horizonLight.position.set(0, 15, -15);
+        scene.add(horizonLight);
 
         // ==========================================
         // 4. Object Containers (Spatial Architecture)
