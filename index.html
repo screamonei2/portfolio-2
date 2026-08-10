@@ -157,39 +157,24 @@
     <!-- Spatial HUD Layer -->
     <div id="hud-layer" style="position: fixed; width: 100vw; height: 100vh; pointer-events: none; z-index: 10; top: 0; left: 0;">
         <div id="hud-hero" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;">
-            <div class="spatial-point" style="top: 30%; left: 35%;">
+            <div class="spatial-point" style="position: absolute; top: 0; left: 0;">
                 <div class="dot red"></div>
                 <div class="line red-line" style="width: 80px; transform: rotate(-45deg);"></div>
                 <div class="label hud-btn-hero" style="transform: translate(-100px, -60px); pointer-events: auto; cursor: pointer;">CLAUDINEI SANTOS<br>ABOUT & PROFILE</div>
             </div>
-            <div class="spatial-point" style="top: 70%; left: 65%;">
-                <div class="dot red"></div>
-                <div class="line red-line" style="width: 120px; transform: rotate(15deg);"></div>
-                <div class="label hud-btn-hero" style="transform: translate(140px, 10px); pointer-events: auto; cursor: pointer;">CLIQUE PARA EXPANDIR</div>
-            </div>
         </div>
         <div id="hud-case1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;">
-            <div class="spatial-point" style="top: 30%; left: 35%;">
+            <div class="spatial-point" style="position: absolute; top: 0; left: 0;">
                 <div class="dot yellow"></div>
                 <div class="line yellow-line" style="width: 80px; transform: rotate(-45deg);"></div>
                 <div class="label hud-btn-case1" style="transform: translate(-100px, -60px); pointer-events: auto; cursor: pointer;">GOOD EGGS REFRESH<br>TIPO: UI ARCHITECTURE</div>
             </div>
-            <div class="spatial-point" style="top: 70%; left: 65%;">
-                <div class="dot yellow"></div>
-                <div class="line yellow-line" style="width: 120px; transform: rotate(15deg);"></div>
-                <div class="label hud-btn-case1" style="transform: translate(140px, 10px); pointer-events: auto; cursor: pointer;">CLIQUE PARA EXPANDIR</div>
-            </div>
         </div>
         <div id="hud-case2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.4s;">
-            <div class="spatial-point" style="top: 30%; left: 35%;">
+            <div class="spatial-point" style="position: absolute; top: 0; left: 0;">
                 <div class="dot cyan"></div>
                 <div class="line cyan-line" style="width: 80px; transform: rotate(-45deg);"></div>
                 <div class="label hud-btn-case2" style="transform: translate(-100px, -60px); pointer-events: auto; cursor: pointer;">ANTIGRAVITY PLATFORM<br>TIPO: FULL-STACK ENG</div>
-            </div>
-            <div class="spatial-point" style="top: 70%; left: 65%;">
-                <div class="dot cyan"></div>
-                <div class="line cyan-line" style="width: 120px; transform: rotate(15deg);"></div>
-                <div class="label hud-btn-case2" style="transform: translate(140px, 10px); pointer-events: auto; cursor: pointer;">CLIQUE PARA EXPANDIR</div>
             </div>
         </div>
     </div>
@@ -268,7 +253,8 @@
         scene.add(cameraGroup);
 
         const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0, 18);
+        camera.position.set(0, 0, 45);
+        camera.rotation.x = -0.15;
         cameraGroup.add(camera);
 
         const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: "high-performance" });
@@ -284,7 +270,7 @@
         }, false);
 
         // ==========================================
-        // 3. Environment & Lighting
+        // 3. Environment & Lighting (Dark Fantasy Obsidian Atmosphere)
         // ==========================================
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         pmremGenerator.compileEquirectangularShader();
@@ -298,12 +284,12 @@
         envScene.add(lightPlane1, lightPlane2);
         scene.environment = pmremGenerator.fromScene(envScene).texture;
 
-        // Global Soft Ambient Light (Eliminates pitch-black shadows)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+        // Global Soft Ambient Light (Dark Obsidian setup)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
         scene.add(ambientLight);
 
-        // Soft Front Fill Light (Ensures high visibility without harsh specular spots)
-        const fillLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        // Soft Front Fill Light (Subtle fill)
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
         fillLight.position.set(0, 0, 10);
         scene.add(fillLight);
 
@@ -317,19 +303,19 @@
         rimLight.position.set(-10, 5, -10);
         scene.add(rimLight);
 
-        // Dedicated Accent Light for Hero (Red Magma) at y = 0
+        // Dedicated Accent Light for Hero (Red Magma) at (0, 0, 15)
         const obj1Light = new THREE.PointLight(0xff3300, 48, 25);
-        obj1Light.position.set(0, 0, 6);
+        obj1Light.position.set(0, 0, 21);
         scene.add(obj1Light);
 
-        // Dedicated Accent Light for Case 1 (Vibrant Yellow) at y = -14
-        const obj2Light = new THREE.PointLight(0xffcc00, 6, 20);
-        obj2Light.position.set(0, -14, 8);
+        // Dedicated Accent Light for Case 1 (Vibrant Yellow) at (12, -8, -5)
+        const obj2Light = new THREE.PointLight(0xffcc00, 12, 20);
+        obj2Light.position.set(12, -8, 2);
         scene.add(obj2Light);
 
-        // Dedicated Accent Light for Case 2 (Electric Cyan) at y = -28
-        const obj3Light = new THREE.PointLight(0x00e5ff, 6, 20);
-        obj3Light.position.set(0, -28, 8);
+        // Dedicated Accent Light for Case 2 (Electric Cyan) at (-10, -16, -12)
+        const obj3Light = new THREE.PointLight(0x00e5ff, 12, 20);
+        obj3Light.position.set(-10, -16, -5);
         scene.add(obj3Light);
 
         // ==========================================
@@ -339,29 +325,31 @@
         scene.add(bgGroup);
 
         // ==========================================
-        // 4. Object Containers (Spatial Architecture)
+        // 4. Object Containers (Volcanic Cavern Slopes Architecture)
         // ==========================================
-        // Object 1 (Hero) at (0, 0, 0) - Viewport 1
+        // Hero (Obj 1): Floating at Cavern Entrance
         const obj1Container = new THREE.Group();
-        obj1Container.position.set(0, 0, 0);
+        obj1Container.position.set(0, 0, 15);
         const obj1Scroll = new THREE.Group();
         const obj1Parallax = new THREE.Group();
         obj1Parallax.position.set(0, 0, 0);
         obj1Scroll.add(obj1Parallax);
         obj1Container.add(obj1Scroll);
 
-        // Object 2 (Case 1) at (0, -14, 0) - Viewport 2
+        // Case 1 (Obj 2): Right Slope of Cavern
         const obj2Container = new THREE.Group();
-        obj2Container.position.set(0, -14, 0);
+        obj2Container.position.set(12, -8, -5);
+        obj2Container.rotation.y = Math.PI / 3;
         const obj2Scroll = new THREE.Group();
         const obj2Parallax = new THREE.Group();
         obj2Parallax.position.set(0, 0, 0);
         obj2Scroll.add(obj2Parallax);
         obj2Container.add(obj2Scroll);
 
-        // Object 3 (Case 2) at (0, -28, 0) - Viewport 3
+        // Case 2 (Obj 3): Left / Rear Slope of Cavern
         const obj3Container = new THREE.Group();
-        obj3Container.position.set(0, -28, 0);
+        obj3Container.position.set(-10, -16, -12);
+        obj3Container.rotation.y = -Math.PI / 1.5;
         const obj3Scroll = new THREE.Group();
         const obj3Parallax = new THREE.Group();
         obj3Parallax.position.set(0, 0, 0);
@@ -492,7 +480,7 @@
             // Dismiss preloader as soon as Hero is ready!
             dismissPreloader();
 
-            // Load Central World (cave.glb - Volcanic Cavern)
+            // Load Central World (cave.glb - Volcanic Obsidian Cavern)
             gltfLoader.loadAsync('./cave.glb').then(gltfCave => {
                 if (gltfCave) {
                     const caveModel = gltfCave.scene;
@@ -505,14 +493,19 @@
                     const caveSize = caveBox.getSize(new THREE.Vector3()).length();
                     const scaleFactor = caveSize > 0 ? (120.0 / caveSize) : 12.0;
                     caveModel.scale.setScalar(scaleFactor);
-                    caveModel.position.set(0, -20, -25);
+                    caveModel.position.set(0, -35, 0);
 
                     caveModel.traverse((child) => {
                         if (child.isMesh && child.material) {
                             child.material = child.material.clone();
-                            child.material.roughness = 0.8;
-                            child.material.metalness = 0.2;
-                            child.material.envMapIntensity = 0.5;
+                            child.material.color.setHex(0x0a0a0c); // Dark obsidian rock
+                            child.material.roughness = 0.95;
+                            child.material.metalness = 0.1;
+                            child.material.envMapIntensity = 0.1;
+                            if (child.material.emissiveMap) {
+                                child.material.emissive.setHex(0xff2200); // Intense lava red
+                                child.material.emissiveIntensity = 4.0;
+                            }
                             child.material.needsUpdate = true;
                         }
                     });
@@ -691,19 +684,16 @@
             }
         });
 
-        // Keyframe 1: Descent to Section 2 (Case 1 at Y = -14) -> Z pullback (+6.0)
-        cameraTL.to(cameraGroup.position, {
-            y: -14,
-            z: 6.0,
+        // Keyframe 1: Orbit 120 deg around cavern and descend to Y = -25
+        cameraTL.to(cameraGroup.rotation, {
+            y: Math.PI * 0.65,
             ease: "power1.inOut"
-        });
+        }, 0);
 
-        // Keyframe 2: Descent to Section 3 (Case 2 at Y = -28) -> Z pullback (+10.0)
         cameraTL.to(cameraGroup.position, {
-            y: -28,
-            z: 10.0,
+            y: -25,
             ease: "power1.inOut"
-        });
+        }, 0);
 
         // ==========================================
         // 8. Post-Processing Pipeline (High-Speed Directional Motion Stretch Shader)
@@ -949,6 +939,29 @@
             }
 
             particlesGeo.attributes.position.needsUpdate = true;
+
+            // 3D Real-Time HUD Projection (Vector3.project)
+            const projObj1 = new THREE.Vector3().setFromMatrixPosition(obj1Parallax.matrixWorld).project(camera);
+            const projObj2 = new THREE.Vector3().setFromMatrixPosition(obj2Parallax.matrixWorld).project(camera);
+            const projObj3 = new THREE.Vector3().setFromMatrixPosition(obj3Parallax.matrixWorld).project(camera);
+
+            const x1 = (projObj1.x * 0.5 + 0.5) * window.innerWidth;
+            const y1 = (-(projObj1.y * 0.5) + 0.5) * window.innerHeight;
+
+            const x2 = (projObj2.x * 0.5 + 0.5) * window.innerWidth;
+            const y2 = (-(projObj2.y * 0.5) + 0.5) * window.innerHeight;
+
+            const x3 = (projObj3.x * 0.5 + 0.5) * window.innerWidth;
+            const y3 = (-(projObj3.y * 0.5) + 0.5) * window.innerHeight;
+
+            const hudPoint1 = document.querySelector('#hud-hero .spatial-point');
+            if (hudPoint1) { hudPoint1.style.transform = `translate(${x1}px, ${y1}px)`; }
+
+            const hudPoint2 = document.querySelector('#hud-case1 .spatial-point');
+            if (hudPoint2) { hudPoint2.style.transform = `translate(${x2}px, ${y2}px)`; }
+
+            const hudPoint3 = document.querySelector('#hud-case2 .spatial-point');
+            if (hudPoint3) { hudPoint3.style.transform = `translate(${x3}px, ${y3}px)`; }
 
             // HUD Layer Opacity Sync (Zero Performance Overhead)
             const hudHero = document.getElementById('hud-hero');
