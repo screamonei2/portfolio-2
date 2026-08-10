@@ -742,12 +742,12 @@
         );
         composer.addPass(bloomPass);
 
-        // Custom High-Performance Directional Speed Stretch Shader (Warp / Motion Blur)
-        const SpeedStretchShader = {
+        // Custom Iconic Violent Radial Wormhole Hyperdrive Shader
+        const WormholeWarpShader = {
             uniforms: {
                 'tDiffuse': { value: null },
                 'uSpeed': { value: 0.0 },
-                'uDirection': { value: new THREE.Vector2(0.0, 1.0) }
+                'uCenter': { value: new THREE.Vector2(0.5, 0.5) }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -759,18 +759,41 @@
             fragmentShader: `
                 uniform sampler2D tDiffuse;
                 uniform float uSpeed;
-                uniform vec2 uDirection;
+                uniform vec2 uCenter;
                 varying vec2 vUv;
 
                 void main() {
+                    vec2 uv = vUv;
+                    vec2 toCenter = uv - uCenter;
+                    float dist = length(toCenter);
+                    
+                    // Violent Wormhole Radial Velocity Force
+                    float warpFactor = uSpeed * 0.18 * pow(max(0.1, dist), 0.7);
+                    
+                    // Vortex Swirl Rotation Angle during Wormhole Entry
+                    float angle = uSpeed * 0.5 * (1.0 - dist);
+                    float cosA = cos(angle);
+                    float sinA = sin(angle);
+                    mat2 rot = mat2(cosA, -sinA, sinA, cosA);
+                    vec2 rotatedToCenter = rot * toCenter;
+
                     vec4 color = vec4(0.0);
                     float total = 0.0;
-                    vec2 dir = uDirection * uSpeed * 0.035;
+                    
+                    // 16-sample Radial Tunnel Zoom Stretch Blur
+                    for (float i = 0.0; i < 16.0; i += 1.0) {
+                        float scale = 1.0 - (i / 15.0) * warpFactor;
+                        float weight = 1.0 - (i / 16.0);
+                        vec2 sampleUv = uCenter + rotatedToCenter * scale;
+                        
+                        // Chromatic Channel Dispersion for Iconic Sci-Fi Flare
+                        vec4 tex;
+                        tex.r = texture2D(tDiffuse, uCenter + (sampleUv - uCenter) * (1.0 + warpFactor * 0.08)).r;
+                        tex.g = texture2D(tDiffuse, sampleUv).g;
+                        tex.b = texture2D(tDiffuse, uCenter + (sampleUv - uCenter) * (1.0 - warpFactor * 0.08)).b;
+                        tex.a = 1.0;
 
-                    for (float i = -6.0; i <= 6.0; i += 1.0) {
-                        float weight = 1.0 - abs(i) / 7.0;
-                        vec2 offset = vUv + dir * (i / 6.0);
-                        color += texture2D(tDiffuse, offset) * weight;
+                        color += tex * weight;
                         total += weight;
                     }
 
@@ -779,8 +802,8 @@
             `
         };
 
-        const speedStretchPass = new ShaderPass(SpeedStretchShader);
-        composer.addPass(speedStretchPass);
+        const wormholePass = new ShaderPass(WormholeWarpShader);
+        composer.addPass(wormholePass);
 
         // ==========================================
         // 9. Ultra-Lightweight Screen Proximity Hover (Zero Raycaster Overhead)
@@ -871,9 +894,9 @@
             bloomPass.strength += (targetBloomStrength - bloomPass.strength) * 0.06;
             bloomPass.threshold += (targetBloomThreshold - bloomPass.threshold) * 0.06;
 
-            // --- Directional Motion Blur Speed Stretch (Warp Stretch during Scroll) ---
-            const targetSpeedStretch = Math.min(1.0, currentScrollVelocity * 0.04);
-            speedStretchPass.uniforms['uSpeed'].value += (targetSpeedStretch - speedStretchPass.uniforms['uSpeed'].value) * 0.15;
+            // --- Violent Radial Wormhole Entry Distortion (Vortex Tunnel Stretch during Scroll) ---
+            const targetWormholeSpeed = Math.min(1.0, currentScrollVelocity * 0.05);
+            wormholePass.uniforms['uSpeed'].value += (targetWormholeSpeed - wormholePass.uniforms['uSpeed'].value) * 0.15;
 
             // Subtle Mouse Parallax (only Y rotation when mouse is active)
             targetX = hasMouseMoved ? (mouseX * 0.1) : 0;
