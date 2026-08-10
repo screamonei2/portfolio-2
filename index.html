@@ -764,6 +764,21 @@
                 obj3Light.intensity += (targetLight3 - obj3Light.intensity) * 0.08;
             }
 
+            // --- Igloo-Style Camera Gyro Sway & Environment Parallax ---
+            const camSwayX = hasMouseMoved ? (mouseX * 0.8) : 0;
+            const camSwayY = hasMouseMoved ? (mouseY * 0.4) : 0;
+            camera.position.x += (camSwayX - camera.position.x) * 0.04;
+            camera.position.y += (camSwayY - camera.position.y) * 0.04;
+            camera.rotation.y = -camera.position.x * 0.03;
+            camera.rotation.x = camera.position.y * 0.03;
+
+            // --- Dynamic Bloom Focus Flare Surge on Hover ---
+            const isAnyHovered = isHoveredObj1 || isHoveredObj2 || isHoveredObj3;
+            const targetBloomStrength = isAnyHovered ? 1.35 : 0.75;
+            const targetBloomThreshold = isAnyHovered ? 0.65 : 0.80;
+            bloomPass.strength += (targetBloomStrength - bloomPass.strength) * 0.06;
+            bloomPass.threshold += (targetBloomThreshold - bloomPass.threshold) * 0.06;
+
             // Subtle Mouse Parallax (only Y rotation when mouse is active)
             targetX = hasMouseMoved ? (mouseX * 0.1) : 0;
 
@@ -773,8 +788,8 @@
 
             // Background Parallax Interaction
             if (typeof bgGroup !== 'undefined') {
-                const bgTargetX = hasMouseMoved ? (mouseX * 2) : 0;
-                const bgTargetY = hasMouseMoved ? (-mouseY * 2) : 0;
+                const bgTargetX = hasMouseMoved ? (mouseX * 2.5) : 0;
+                const bgTargetY = hasMouseMoved ? (-mouseY * 2.5) : 0;
                 bgGroup.position.x += (bgTargetX - bgGroup.position.x) * 0.02;
                 bgGroup.position.y += (bgTargetY - bgGroup.position.y) * 0.02;
             }
